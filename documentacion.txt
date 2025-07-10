@@ -1,0 +1,139 @@
+Documentación técnica del proyecto - Sistema de Inventario en Django:
+
+1. Objetivo del Proyecto:
+El objetivo principal es crear un sistema web funcional y sencillo en Django que permita:
+- Agregar productos con nombre y cantidad desde una interfaz web.
+- Visualizar en una tabla todos los productos almacenados.
+- Mostrar el número total de productos existentes en la base de datos.
+
+2. Tecnologías Utilizadas:
+- Lenguaje de programación: Python 3
+- Framework web: Django 4.2
+- Motor de base de datos: SQLite3
+- HTML y Django Templates para el frontend
+
+3. Estructura del Proyecto:
+inventario/
+├── manage.py
+├── inventario/
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── productos/
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── models.py
+│   ├── views.py
+│   └── templates/
+│       └── vista_unica.html
+└── db.sqlite3
+
+4. Modelo de Datos (models.py):
+La clase Producto define la estructura de los datos que se almacenarán en la base de datos.
+
+class Producto(models.Model):
+    producto = models.CharField(max_length=100)
+    cantidad = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"{self.producto} ({self.cantidad})"
+
+5. Formulario (forms.py):
+El formulario ProductoForm utiliza ModelForm para automatizar el mapeo de campos del modelo.
+
+class ProductoForm(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = ['producto', 'cantidad']
+
+
+6. Vista Principal (views.py):
+La vista vista_unica permite:
+- Mostrar el formulario.
+- Guardar productos si se envía un POST.
+- Mostrar todos los productos existentes.
+
+def vista_unica(request):
+    productos = Producto.objects.all()
+    cantidad_total = productos.count()
+
+    if request.method == 'POST':
+        form = ProductoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('vista_unica')
+    else:
+        form = ProductoForm()
+
+    return render(request, 'vista_unica.html', {
+        'form': form,
+        'productos': productos,
+        'cantidad_total': cantidad_total
+    })
+
+
+
+
+7. Template (vista_unica.html):
+
+<!DOCTYPE html>
+<html>
+<head><title>Inventario</title></head>
+<body>
+    <h1>Agregar Producto</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Agregar</button>
+    </form>
+
+    <h2>Lista de productos</h2>
+    <p>Total de productos: {{ cantidad_total }}</p>
+    <table border="1">
+        <tr><th>ID</th><th>Producto</th><th>Cantidad</th></tr>
+        {% for p in productos %}
+        <tr><td>{{ p.id }}</td><td>{{ p.producto }}</td><td>{{ p.cantidad }}</td></tr>
+        {% empty %}
+        <tr><td colspan="3">No hay productos cargados.</td></tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
+
+8. Funcionamiento detallado:
+1. El usuario accede a la vista principal (http://127.0.0.1:8000/) y ve un formulario HTML para agregar un producto.
+2. El formulario se renderiza usando Django Template y está vinculado al modelo mediante ProductoForm.
+3. Cuando el usuario completa el formulario y presiona el botón 'Agregar', se envía una solicitud POST al servidor.
+4. Django recibe esa solicitud en la vista `vista_unica`. Allí:
+   - Se valida el formulario.
+   - Si es válido, se guarda automáticamente en la tabla `productos_producto` de SQLite.
+   - Luego, se redirige a la misma página (para evitar reenvíos duplicados).
+5. La vista consulta todos los productos (`Producto.objects.all()`), calcula la cantidad (`count()`), y pasa esta info al template.
+6. El template itera con `{% for p in productos %}` para mostrar los datos en una tabla HTML.
+7. Cada recarga de página muestra en tiempo real los nuevos productos cargados.
+
+9. Persistencia en Base de Datos:
+- La base de datos utilizada es SQLite3, ubicada en el archivo `db.sqlite3`.
+- Django crea automáticamente la tabla `productos_producto` cuando se ejecutan:
+
+    python manage.py makemigrations
+    python manage.py migrate
+
+- Cada vez que se guarda un formulario, Django crea un nuevo registro en esa tabla.
+
+
+10. Instrucciones para Ejecutar el Proyecto:
+1. Clonar o descargar el proyecto.
+2. Abrir una terminal y navegar a la carpeta.
+3. Ejecutar:
+
+    python manage.py makemigrations
+    python manage.py migrate
+    python manage.py runserver
+
+4. Ir a http://127.0.0.1:8000 en el navegador.
+
+
