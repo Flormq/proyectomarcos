@@ -1,0 +1,19 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lista de Productos</title>
+</head>
+<body>
+    <h1>Lista de Productos</h1>
+    <p>Total de productos: {{ cantidad_total }}</p>
+    <ul>
+        {% for producto in productos %}
+            <li>{{ producto.nombre }} - {{ producto.cantidad }} unidades</li>
+        {% empty %}
+            <li>No hay productos.</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'agregar_producto' %}">Agregar nuevo producto</a>
+</body>
+</html>
